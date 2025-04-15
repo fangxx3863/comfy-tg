@@ -1,0 +1,9 @@
+.idea/
+.git
+tmp/*
+venv/
+.env
+config.ini
+./test*.py
+debug.log
+__pycache__/
