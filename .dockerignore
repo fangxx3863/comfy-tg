@@ -4,6 +4,7 @@ tmp/*
 venv/
 .env
 config.ini
+backends
 ./test*.py
 debug.log
 __pycache__/

@@ -12,7 +12,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await query.answer()
     callback_data = query.data
     
-    if "&model&:" in callback_data:
+    if "model_choice:" in callback_data:
         await model_button(update, context)
 
 def setup_handlers(app):

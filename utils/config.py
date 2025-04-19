@@ -3,51 +3,54 @@ import os
 import time
 import logging
 
-# 定义全局变量
-last_prompt = ""
-img_res = "1152*896"
-current_model = "noobai_xl_vp1_0_fast_mix_hires"
+# 用户配置字典，键为用户ID字符串，值为配置字典
+user_configs = {}
+DEFAULT_IMG_RES = "896*1152"
+DEFAULT_CURRENT_MODEL = "malaIllustriousxl_xl_v20_fast_mix_hires"
 
 def config_setup():
-    global last_prompt, img_res, current_model
+    global user_configs
+    user_configs = {}
     config = configparser.ConfigParser()
-    # 如果INI文件不存在，则使用默认值创建
+    
     if not os.path.exists('config.ini'):
+        # 创建默认配置文件
         config['DEFAULT'] = {
-            'last_prompt': last_prompt,
-            'img_res': img_res,
-            'current_model': current_model
+            'img_res': DEFAULT_IMG_RES,
+            'current_model': DEFAULT_CURRENT_MODEL
         }
         with open('config.ini', 'w') as configfile:
             config.write(configfile)
     else:
-        # 如果INI文件存在，则读取值到全局变量
         config.read('config.ini')
-        last_prompt = config.get('DEFAULT', 'last_prompt', fallback=last_prompt)
-        img_res = config.get('DEFAULT', 'img_res', fallback=img_res)
-        current_model = config.get('DEFAULT', 'current_model', fallback=current_model)
+        # 加载所有用户配置
+        for section in config.sections():
+            user_id = section
+            user_configs[user_id] = {
+                'last_prompt': config.get(section, 'last_prompt', fallback=''),
+                'img_res': config.get(section, 'img_res', fallback=DEFAULT_IMG_RES),
+                'current_model': config.get(section, 'current_model', fallback=DEFAULT_CURRENT_MODEL)
+            }
 
 def config_update():
-    global last_prompt, img_res, current_model
-    config = configparser.ConfigParser()
+    global user_configs
     while True:
-        time.sleep(10)  # 每10秒检查一次
-        # print("Check config.ini.")
-        # 读取当前INI文件的内容
+        time.sleep(10)
+        config = configparser.ConfigParser()
         config.read('config.ini')
-        current_last_prompt = config.get('DEFAULT', 'last_prompt', fallback=None)
-        current_img_res = config.get('DEFAULT', 'img_res', fallback=None)
-        current_current_model = config.get('DEFAULT', 'current_model', fallback=None)
         
+        # 更新或添加用户配置
+        for user_id, config_data in user_configs.items():
+            user_id_str = str(user_id)
+            if not config.has_section(user_id_str):
+                config.add_section(user_id_str)
+            
+            # 更新配置项
+            config.set(user_id_str, 'last_prompt', config_data['last_prompt'])
+            config.set(user_id_str, 'img_res', config_data['img_res'])
+            config.set(user_id_str, 'current_model', config_data['current_model'])
         
-        # 检查全局变量与INI文件内容是否一致
-        if (last_prompt != current_last_prompt or
-            img_res != current_img_res or
-            current_model != current_current_model):
-            # 如果不一致，则更新INI文件
-            config.set('DEFAULT', 'last_prompt', last_prompt)
-            config.set('DEFAULT', 'img_res', img_res)
-            config.set('DEFAULT', 'current_model', current_model)
-            with open('config.ini', 'w') as configfile:
-                config.write(configfile)
-            logging.info("Config updated.")
+        # 写入配置文件
+        with open('config.ini', 'w') as configfile:
+            config.write(configfile)
+        # logging.info("Config updated.")

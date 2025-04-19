@@ -6,6 +6,7 @@ import logging
 from dotenv import load_dotenv
 import logging
 import asyncio
+import utils.config as cfg
 from telegram import error as telegram_error
 
 # Load API configuration from environment variables
@@ -13,6 +14,15 @@ load_dotenv()
 COMFYUI_IP = os.getenv("COMFYUI_IP")
 COMFYUI_PORT = os.getenv("COMFYUI_PORT")
 
+async def ensure_user_config(user_id):
+    """确保用户配置存在，不存在则初始化"""
+    user_id_str = str(user_id)
+    if user_id_str not in cfg.user_configs:
+        cfg.user_configs[user_id_str] = {
+            'last_prompt': '',
+            'img_res': cfg.DEFAULT_IMG_RES,
+            'current_model': cfg.DEFAULT_CURRENT_MODEL
+        }
 
 def filter_command(text):
     """去除字符串中的命令部分（第一个分割后的元素）"""

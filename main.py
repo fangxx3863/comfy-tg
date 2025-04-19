@@ -2,6 +2,7 @@ import logging
 import os
 import threading
 import time
+import shutil
 from dotenv import load_dotenv
 from telegram.ext import ApplicationBuilder
 from actions.bot_commands import setup_handlers
@@ -15,6 +16,30 @@ if not BOT_TOKEN:
 
 # 加载配置文件
 config_setup()
+
+# 复制默认配置文件
+def copy_default_backends():
+    backends_dir = 'backends'
+    default_dir = 'backends_default'
+    
+    # 如果backends目录不存在，则创建并复制默认内容
+    if not os.path.exists(backends_dir):
+        logging.info("Backends Not Found, Copy Default.")
+        shutil.copytree(default_dir, backends_dir)
+        return
+    
+    # 检查backends目录是否为空
+    if not os.listdir(backends_dir):
+        # 遍历默认目录中的所有项目并复制到目标目录
+        logging.info("Backends Not Found, Copy Default.")
+        for item in os.listdir(default_dir):
+            src_path = os.path.join(default_dir, item)
+            dst_path = os.path.join(backends_dir, item)
+            # 如果是目录则递归复制，否则复制文件
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, dst_path)
+            else:
+                shutil.copy2(src_path, dst_path)
 
 # 缓存定时清理
 def clean_tmp_folder():
@@ -51,6 +76,9 @@ logger = logging.getLogger()
 # 将自定义过滤器添加到所有处理器中
 for handler in logger.handlers:
     handler.addFilter(NoGetUpdatesFilter())
+
+# 检测配置文件并复制
+copy_default_backends()
 
 # 启动清理线程
 cleaning_thread = threading.Thread(target=clean_tmp_folder, daemon=True)
